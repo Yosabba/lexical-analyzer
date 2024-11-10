@@ -9,12 +9,6 @@ import (
 	"strings"
 )
 
-// Token types
-const (
-	NUMBER   = "NUMBER"
-	OPERATOR = "OPERATOR"
-)
-
 // Token represents a lexical token
 type Token struct {
 	Lexeme string
@@ -30,12 +24,14 @@ func isOperator(ch rune) bool {
 		return false
 	}
 
-	
 }
 
 // tokenize splits the input string into tokens
 func tokenize(input string) []Token {
 	var tokens []Token
+	NUMBER := "NUMBER"
+	OPERATOR := "OPERATOR"
+	
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	scanner.Split(bufio.ScanWords)
 
