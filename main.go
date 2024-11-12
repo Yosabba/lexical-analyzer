@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"os"
@@ -12,13 +11,46 @@ const (
 	IDENTIFIER  = "identifier"
 	INT_LITERAL = "int_literal"
 	OPERATOR    = "operator"
-	EQUALS      = "equal_sign"
 	DELIMITER   = "delimiter"
 )
 
 type Token struct {
 	Lexeme string
 	Type   string
+}
+
+func readUserFile(fileName string) string {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	content, err := os.ReadFile(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return string(content)
+}
+
+func main() {
+	var fileName string
+
+	fmt.Println("What is the name of your file:?\nPlease add the extension (i.e: example.txt)")
+	fmt.Scanln(&fileName)
+
+	contentOfFile := readUserFile(fileName)
+	tokens := tokenizeFile(contentOfFile)
+
+	//lexeme & token needs to be be in a table so format it to be in a table with a 10 char min
+	fmt.Printf("%-10s %-10s\n", "Lexeme", "Token")
+	fmt.Println(strings.Repeat("-", 20))
+
+	for _, token := range tokens {
+		fmt.Printf("%-10s %-10s\n", token.Lexeme, token.Type)
+	}
+
 }
 
 func isCharOperator(character rune) bool {
@@ -32,7 +64,7 @@ func isCharOperator(character rune) bool {
 
 func isCharDelimiter(character rune) bool {
 	switch character {
-	case '(', ')', '{', '}', '[', ']', ';', ',', '_':
+	case '(', ')', '{', '}', '[', ']', ';', '_':
 		return true
 	default:
 		return false
@@ -60,64 +92,43 @@ func isIdentifier(word string) bool {
 	return true
 }
 
+func determineTokenType(lexeme string) string {
+	if isNumber(lexeme) {
+		return INT_LITERAL
+	}
+	return IDENTIFIER
+}
+
 func tokenizeFile(input string) []Token {
 	var tokens []Token
-	scanner := bufio.NewScanner(strings.NewReader(input))
-	scanner.Split(bufio.ScanWords)
+	current := ""
 
-	for scanner.Scan() {
-		word := scanner.Text()
-		if isNumber(word) {
-			tokens = append(tokens, Token{Lexeme: word, Type: INT_LITERAL})
-		} else if len(word) == 1 {
-			char := rune(word[0])
-			switch {
-			case isCharOperator(char):
-				if word == "=" {
-					tokens = append(tokens, Token{Lexeme: word, Type: EQUALS})
-				} else {
-					tokens = append(tokens, Token{Lexeme: word, Type: OPERATOR})
-				}
-			case isCharDelimiter(char):
-				tokens = append(tokens, Token{Lexeme: word, Type: DELIMITER})
+	for _, char := range input {
+		if isCharOperator(char) {
+			if current != "" {
+				tokens = append(tokens, Token{current, determineTokenType(current)})
+				current = ""
 			}
-		} else if isIdentifier(word) {
-			tokens = append(tokens, Token{Lexeme: word, Type: IDENTIFIER})
+
+			tokens = append(tokens, Token{string(char), OPERATOR})
+		} else if isCharDelimiter(char) {
+
+			if current != "" {
+				tokens = append(tokens, Token{current, determineTokenType(current)})
+				current = ""
+			}
+
+			tokens = append(tokens, Token{string(char), DELIMITER})
+		} else {
+			current += string(char)
 		}
 	}
+
+	if current != "" {
+		tokens = append(tokens, Token{current, determineTokenType(current)})
+	}
+
 	return tokens
 }
 
-func readUserFile(fileName string) string {
-	file, err := os.Open(fileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
 
-	content, err := os.ReadFile(fileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return string(content)
-}
-
-func main() {
-	var fileName string
-
-	fmt.Println("What is the name of your file:?\nPlease add the extension (i.e: names.txt)")
-	fmt.Scanln(&fileName)
-
-	contentOfFile := readUserFile(fileName)
-	tokens := tokenizeFile(contentOfFile)
-
-	//lexeme & token needs to be be in a table so format it to be in a table with a 10 char min
-	fmt.Printf("%-10s %-10s\n", "Lexeme", "Token")
-	fmt.Println(strings.Repeat("-", 20))
-
-	for _, token := range tokens {
-		fmt.Printf("%-10s %-10s\n", token.Lexeme, token.Type)
-	}
-
-}
