@@ -20,7 +20,7 @@ This program reads a text file from a user and breaks down its contents into tok
 
 Commas and whitespace don't get noticed as a deleimiters and will not be read by the program. Which will in turn result in program giving wrong type names.
 The program is interactive based on what's in the text file the user inputs.
-I'm using Structs to store lexeme token parts, Scanner to iterate through words in file and a basic linear search algo.Thre output represents indentifiers, integers, operartors, delimiters.
+I'm using Structs to store lexeme token parts, Scanner to iterate through words in file and a basic linear search algo. The output represents indentifiers, integers, operartors, delimiters.
 
 
 ## Outputs
