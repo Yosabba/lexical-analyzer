@@ -1,67 +1,20 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 )
 
-// Token represents a lexical token
-type Token struct {
-	Lexeme string
-	Type   string
-}
-
-// isOperator checks if a character is a valid operator
-func isOperator(ch rune) bool {
-	switch ch {
-	case '+', '-', '*', '/':
-		return true
-	default:
-		return false
-	}
-
-}
-
-// tokenize splits the input string into tokens
-func tokenize(input string) []Token {
-	var tokens []Token
-	NUMBER := "NUMBER"
-	OPERATOR := "OPERATOR"
-	
-	scanner := bufio.NewScanner(strings.NewReader(input))
-	scanner.Split(bufio.ScanWords)
-
-	for scanner.Scan() {
-		lexeme := scanner.Text()
-		if _, err := strconv.Atoi(lexeme); err == nil {
-			tokens = append(tokens, Token{Lexeme: lexeme, Type: NUMBER})
-		} else if len(lexeme) == 1 && isOperator(rune(lexeme[0])) {
-			tokens = append(tokens, Token{Lexeme: lexeme, Type: OPERATOR})
-		} else {
-			log.Fatalf("Unknown lexeme: %s", lexeme)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	return tokens
-}
-
-// readFile reads the content of a file
-func readFile(filePath string) string {
-	file, err := os.Open(filePath)
+func readUserFile(fileName string) string {
+	file, err := os.Open(fileName)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 
-	content, err := os.ReadFile(filePath)
+	content, err := os.ReadFile(fileName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,17 +23,20 @@ func readFile(filePath string) string {
 }
 
 func main() {
-	var filePath string
+	var fileName string
 
 	fmt.Println("What is the name of your file:?\nPlease add the extension (i.e: names.txt)")
-	fmt.Scanln(&filePath)
+	fmt.Scanln(&fileName)
 
-	content := readFile(filePath)
-	tokens := tokenize(content)
+	contentOfFile := readUserFile(fileName)
+	tokens := tokenizeFile(contentOfFile)
 
+	//lexeme & token needs to be be in a table so format it to be in a table with a 10 char min
 	fmt.Printf("%-10s %-10s\n", "Lexeme", "Token")
 	fmt.Println(strings.Repeat("-", 20))
+
 	for _, token := range tokens {
 		fmt.Printf("%-10s %-10s\n", token.Lexeme, token.Type)
 	}
+
 }
