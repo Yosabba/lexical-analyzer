@@ -2,9 +2,16 @@ package main
 
 import (
 	"bufio"
-	"log"
-	"strconv"
+
 	"strings"
+)
+
+const (
+	IDENTIFIER  = "identifier"
+	INT_LITERAL = "int_literal"
+	OPERATOR    = "operator"
+	EQUALS      = "equal_sign"
+	DELIMITER   = "delimiter"
 )
 
 type Token struct {
@@ -14,38 +21,67 @@ type Token struct {
 
 func isCharOperator(character rune) bool {
 	switch character {
-	case '+', '-', '*', '/':
+	case '+', '-', '*', '/', '=':
 		return true
 	default:
 		return false
 	}
 }
 
-// tokenize splits the input string into tokens
+func isCharDelimiter(character rune) bool {
+	switch character {
+	case '(', ')', '{', '}', '[', ']', ';', ',', '_':
+		return true
+	default:
+		return false
+	}
+}
+
+func isNumber(word string) bool {
+	for _, char := range word {
+		if char < '0' || char > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func isIdentifier(word string) bool {
+	if len(word) == 0 {
+		return false
+	}
+	for i, char := range word {
+		if (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && (char != '_') && (i == 0 || (char < '0' || char > '9')) {
+			return false
+		}
+	}
+	return true
+}
+
 func tokenizeFile(input string) []Token {
 	var tokens []Token
-
-	NUMBER := "NUMBER"
-	OPERATOR := "OPERATOR"
-
 	scanner := bufio.NewScanner(strings.NewReader(input))
-
 	scanner.Split(bufio.ScanWords)
 
 	for scanner.Scan() {
-		lexeme := scanner.Text()
-		if _, err := strconv.Atoi(lexeme); err == nil {
-			tokens = append(tokens, Token{Lexeme: lexeme, Type: NUMBER})
-		} else if len(lexeme) == 1 && isCharOperator(rune(lexeme[0])) {
-			tokens = append(tokens, Token{Lexeme: lexeme, Type: OPERATOR})
-		} else {
-			log.Fatalf("Unknown lexeme: %s", lexeme)
+		word := scanner.Text()
+		if isNumber(word) {
+			tokens = append(tokens, Token{Lexeme: word, Type: INT_LITERAL})
+		} else if len(word) == 1 {
+			char := rune(word[0])
+			switch {
+			case isCharOperator(char):
+				if word == "=" {
+					tokens = append(tokens, Token{Lexeme: word, Type: EQUALS})
+				} else {
+					tokens = append(tokens, Token{Lexeme: word, Type: OPERATOR})
+				}
+			case isCharDelimiter(char):
+				tokens = append(tokens, Token{Lexeme: word, Type: DELIMITER})
+			}
+		} else if isIdentifier(word) {
+			tokens = append(tokens, Token{Lexeme: word, Type: IDENTIFIER})
 		}
 	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
 	return tokens
 }
